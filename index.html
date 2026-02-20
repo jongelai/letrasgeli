@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sopa de Letras Pro</title>
+    <link rel="stylesheet" href="letras.css">
+</head>
+<body>
+
+    <div id="menu-inicio">
+        <h1>LLUVIA DE LETRAS</h1>
+        <h3>SELECCIONA TEMA</h3>
+        <div class="grupo-botones" id="grupo-temas">
+            <button class="btn-opcion active" onclick="setTema('ANIMALES', this)">ANIMALES</button>
+            <button class="btn-opcion" onclick="setTema('PLANTAS', this)">PLANTAS</button>
+            <button class="btn-opcion" onclick="setTema('COLORES', this)">COLORES</button>
+        </div>
+        <h3>DIFICULTAD</h3>
+        <div class="grupo-botones" id="grupo-niveles">
+            <button class="btn-opcion active" onclick="setNivel('NIVEL 1', this)">NIVEL 1</button>
+            <button class="btn-opcion" onclick="setNivel('NIVEL 2', this)">NIVEL 2</button>
+            <button class="btn-opcion" onclick="setNivel('NIVEL 3', this)">NIVEL 3</button>
+        </div>
+        <button id="btn-jugar" onclick="empezarPartida()">¡EMPEZAR!</button>
+    </div>
+
+    <div id="sidebar-words" class="sidebar-fashion"></div>
+
+    <button id="btn-reiniciar" onclick="location.reload()" style="display:none;">VOLVER A JUGAR</button>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
