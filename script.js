@@ -15,21 +15,35 @@ let palabrasObj = [], casillas = [], letras = [], particulas = [];
 let tiempoTotal, tiempoRestante, juegoActivo = false, letraArrastrada = null;
 let ultimoFrame = 0;
 
-// --- AUDIO ---
+// --- SISTEMA DE AUDIO ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 function playSound(f, t, d, v = 0.1) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     try {
-        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = t;
+        o.frequency.setValueAtTime(f, audioCtx.currentTime);
         g.gain.setValueAtTime(v, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + d);
-    } catch(e) {}
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        o.stop(audioCtx.currentTime + d);
+    } catch (e) { console.log("Error de audio"); }
 }
+
 const sndPop = () => playSound(440, 'sine', 0.1, 0.05);
-const sndMagic = () => { playSound(660, 'triangle', 0.3, 0.04); setTimeout(() => playSound(880, 'triangle', 0.3, 0.04), 100); };
-const sndWin = () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playSound(f, 'sine', 0.4, 0.06), i * 100)); };
+const sndMagic = () => { 
+    playSound(660, 'triangle', 0.3, 0.04); 
+    setTimeout(() => playSound(880, 'triangle', 0.3, 0.04), 100); 
+};
+const sndWin = () => { 
+    [523, 659, 783, 1046].forEach((f, i) => {
+        setTimeout(() => playSound(f, 'sine', 0.4, 0.06), i * 100);
+    });
+};
 
 class Particula {
     constructor(x, y, color = null) {
@@ -50,14 +64,19 @@ class Letra {
         this.esComodin = Math.random() < 0.12;
         this.char = this.esComodin ? "?" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
         this.x = (W * 0.35) + (this.col * ((W * 0.6) / 10));
-        this.y = -20;
+        this.y = Math.random() * -100;
         this.vel = (1.2 + Math.random() * 1.5) * scale;
         this.dragging = false;
     }
-    update() { if (!this.dragging && juegoActivo) { this.y += this.vel; if (this.y > H * 0.79) this.reset(); } }
+    update() { 
+        if (!this.dragging && juegoActivo) { 
+            this.y += this.vel; 
+            if (this.y > H * 0.79) this.reset(); // Muere antes de las casillas
+        } 
+    }
     draw() {
         ctx.save();
-        ctx.font = `300 ${42 * scale}px 'Segoe UI', Arial`; // LETRAS GRANDES
+        ctx.font = `300 ${42 * scale}px 'Segoe UI', Arial`;
         ctx.textAlign = "center";
         if (this.esComodin) { ctx.fillStyle = "#f1c40f"; ctx.shadowBlur = 10; ctx.shadowColor = "#f1c40f"; }
         else { ctx.fillStyle = this.dragging ? "#00d4ff" : "white"; }
@@ -71,11 +90,8 @@ function iniciarLogica() {
     tiempoTotal = NIVELES[nivelSel] * 1000; tiempoRestante = tiempoTotal;
     juegoActivo = true; casillas = [];
     let n = 8, anchoArea = W * 0.6;
-    
-    // Ajuste de proporciones: Rectangulares pero elegantes
     let wC = (anchoArea / n) * 0.85;
-    let hC = wC * 1.4; // Un poco más altas para que parezcan contenedores de letras
-
+    let hC = wC * 1.4;
     for(let i=0; i<n; i++) {
         casillas.push({ x: (W*0.35) + i*(anchoArea/n), y: H*0.80, w: wC, h: hC, letra: "" });
     }
@@ -87,7 +103,10 @@ function iniciarLogica() {
 function loop(t) {
     let dt = t - ultimoFrame; ultimoFrame = t;
     ctx.clearRect(0, 0, W, H);
-    if (juegoActivo) { tiempoRestante -= dt; if (tiempoRestante <= 0 || palabrasObj.length === 0) juegoActivo = false; }
+    if (juegoActivo) { 
+        tiempoRestante -= dt; 
+        if (tiempoRestante <= 0 || palabrasObj.length === 0) juegoActivo = false; 
+    }
 
     // Barra de tiempo
     ctx.fillStyle = "rgba(255, 255, 255, 0.05)"; ctx.fillRect(W*0.35, 40, W*0.6, 4);
@@ -96,33 +115,17 @@ function loop(t) {
     letras.forEach(l => { l.update(); l.draw(); });
     particulas = particulas.filter(p => p.alpha > 0); particulas.forEach(p => p.draw());
 
-    // --- DIBUJO DE CASILLAS RECTANGULARES AZULES ---
     casillas.forEach(c => {
-        // Fondo azul oscuro translúcido (estilo lluvia)
         ctx.fillStyle = c.letra ? "rgba(0, 212, 255, 0.2)" : "rgba(255, 255, 255, 0.03)";
         ctx.fillRect(c.x, c.y, c.w, c.h);
-        
-        // Borde neón sutil
         ctx.strokeStyle = c.letra ? "#00d4ff" : "rgba(0, 212, 255, 0.3)";
         ctx.lineWidth = c.letra ? 2 : 1;
         ctx.strokeRect(c.x, c.y, c.w, c.h);
 
-        if (!c.letra) {
-            // Esquinas Sci-Fi
-            ctx.beginPath(); ctx.strokeStyle = "#00d4ff"; ctx.lineWidth = 1.5;
-            ctx.moveTo(c.x, c.y+8); ctx.lineTo(c.x, c.y); ctx.lineTo(c.x+8, c.y);
-            ctx.moveTo(c.x+c.w-8, c.y+c.h); ctx.lineTo(c.x+c.w, c.y+c.h); ctx.lineTo(c.x+c.w, c.y+c.h-8);
-            ctx.stroke();
-        } else {
-            // Letra en blanco/dorado con brillo
+        if (c.letra) {
             ctx.save();
-            if (c.letra === "?") {
-                ctx.fillStyle = "#f1c40f"; ctx.shadowBlur = 10; ctx.shadowColor = "#f1c40f";
-            } else {
-                ctx.fillStyle = "#ffffff"; ctx.shadowBlur = 8; ctx.shadowColor = "#00d4ff";
-            }
-            ctx.font = `300 ${32 * scale}px 'Segoe UI', Arial`;
-            ctx.textAlign = "center";
+            ctx.fillStyle = c.letra === "?" ? "#f1c40f" : "#ffffff";
+            ctx.font = `300 ${32 * scale}px 'Segoe UI', Arial`; ctx.textAlign = "center";
             ctx.fillText(c.letra, c.x + c.w/2, c.y + c.h/2 + 10);
             ctx.restore();
         }
@@ -142,15 +145,24 @@ function loop(t) {
 function manejarInicio(e) {
     if (!juegoActivo) return;
     const pos = getPos(e);
+    
+    // Al sacar de casilla
     casillas.forEach(c => {
         if (pos.x > c.x && pos.x < c.x+c.w && pos.y > c.y && pos.y < c.y+c.h && c.letra !== "") {
-            sndPop(); letraArrastrada = new Letra(99); letraArrastrada.char = c.letra;
+            sndPop();
+            letraArrastrada = new Letra(99); letraArrastrada.char = c.letra;
             letraArrastrada.x = pos.x; letraArrastrada.y = pos.y;
             letraArrastrada.dragging = true; c.letra = "";
         }
     });
+    // Al atrapar de la lluvia
     if (!letraArrastrada) {
-        letras.forEach(l => { if (Math.abs(l.x - pos.x) < 45*scale && Math.abs(l.y - pos.y) < 45*scale) { sndPop(); letraArrastrada = l; l.dragging = true; } });
+        letras.forEach(l => { 
+            if (Math.abs(l.x - pos.x) < 45*scale && Math.abs(l.y - pos.y) < 45*scale) { 
+                sndPop();
+                letraArrastrada = l; l.dragging = true; 
+            } 
+        });
     }
 }
 
@@ -191,7 +203,14 @@ function verificar() {
     });
 }
 
-function empezarPartida() { if (audioCtx.state === 'suspended') audioCtx.resume(); menu.style.display = 'none'; canvas.style.display = 'block'; resize(); iniciarLogica(); }
+function empezarPartida() { 
+    if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    menu.style.display = 'none'; 
+    canvas.style.display = 'block'; 
+    resize(); 
+    iniciarLogica(); 
+}
+
 function setTema(t, b) { temaSel = t; document.querySelectorAll('#grupo-temas .btn-opcion').forEach(x => x.classList.remove('active')); b.classList.add('active'); }
 function setNivel(n, b) { nivelSel = n; document.querySelectorAll('#grupo-niveles .btn-opcion').forEach(x => x.classList.remove('active')); b.classList.add('active'); }
 function actualizarSidebar() {
