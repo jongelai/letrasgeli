@@ -3,37 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LLUVIA DE LETRAS</title>
+    <title>Lluvia de Letras - Survival Movil</title>
     <link rel="stylesheet" href="letras.css">
 </head>
 <body>
+
     <div id="menu-inicio">
-        <h1>LLUVIA DE LETRAS</h1>
-        
-        <div class="seccion-opciones">
-            <p>TEMA</p>
-            <div id="grupo-temas">
-                <button class="btn-opcion active" onclick="setTema('ANIMALES', this)">ANIMALES</button>
-                <button class="btn-opcion" onclick="setTema('PLANTAS', this)">PLANTAS</button>
-                <button class="btn-opcion" onclick="setTema('COLORES', this)">COLORES</button>
-            </div>
+        <h1>SURVIVAL: LETRAS</h1>
+        <div class="seccion-opciones" id="grupo-temas">
+            <p>Categoría</p>
+            <button class="btn-opcion active" onclick="setTema('ANIMALES', this)">ANIMALES</button>
+            <button class="btn-opcion" onclick="setTema('PLANTAS', this)">PLANTAS</button>
+            <button class="btn-opcion" onclick="setTema('COLORES', this)">COLORES</button>
         </div>
-
-        <div class="seccion-opciones">
-            <p>DIFICULTAD</p>
-            <div id="grupo-niveles">
-                <button class="btn-opcion active" onclick="setNivel('NIVEL 1', this)">FÁCIL</button>
-                <button class="btn-opcion" onclick="setNivel('NIVEL 2', this)">MEDIO</button>
-                <button class="btn-opcion" onclick="setNivel('NIVEL 3', this)">DIFÍCIL</button>
-            </div>
-        </div>
-
-        <button id="btn-jugar" onclick="empezarPartida()">¡EMPEZAR!</button>
+        <button id="btn-jugar" onclick="empezarPartida()">EMPEZAR</button>
     </div>
 
-    <div id="sidebar-words"></div>
-    <canvas id="gameCanvas" style="display:none;"></canvas>
-    <button id="btn-reiniciar" onclick="location.reload()">Volver a jugar</button>
+    <div id="score-container">PUNTOS: <span id="puntos">0</span></div>
+    
+    <div id="word-runner"></div>
+
+    <canvas id="gameCanvas"></canvas>
+    <button id="btn-reiniciar" onclick="reiniciar()">Reintentar</button>
 
     <script src="script.js"></script>
 </body>
