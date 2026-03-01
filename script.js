@@ -16,8 +16,8 @@ let palabraActual = "", juegoActivo = false, puntos = 0;
 let letraArrastrada = null, ultimoFrame = 0;
 
 // Configuración de movimiento y dificultad
-let runnerPosX = -200;
-let runnerVel = 0.5; // Velocidad inicial (píxeles por frame aprox)
+let runnerPosX = -100;
+let runnerVel = 0.2; // Velocidad inicial (píxeles por frame aprox)
 let multiplicadorVel = 1.05; // Aumento de velocidad cada palabra resuelta
 
 function setTema(t, b) {
