@@ -3,12 +3,57 @@ const ctx = canvas.getContext('2d');
 
 let W, H, scale, activo = false;
 let pActual = "", cola = [], letras = [], casillas = [];
-let rX = 0, rVel = 0.6, pts = 0, letraArrastrada = null;
+let rX = 0, rVel = 0.3, pts = 0, letraArrastrada = null;
 
-const TEMAS = { 
-    "ANIMALES": ["LOBO", "TIGRE", "MONO", "CEBRA", "PANDA", "LEON"], 
-    "PLANTAS": ["ROSA", "PINO", "ALGA", "OLMO", "BAMBU", "FLOR"],
-    "COLORES": ["ROJO", "AZUL", "VERDE", "GRIS", "ROSA", "CIAN"]
+const TEMAS = {
+    "ANIMALES": [
+        "LOBO", "TIGRE", "MONO", "CEBRA", "PANDA",
+        "LEON", "GATO", "PERRO", "RANA", "SAPO",
+        "FOCA", "KOALA", "BURRO", "MULA", "OVEJA",
+        "CABRA", "PATO", "CISNE", "MOSCA", "RATON"
+    ],
+
+    "PLANTAS": [
+        "ROSA", "PINO", "ALGA", "OLMO", "BAMBU",
+        "FLOR", "LIRIO", "CACTO", "MUSGO", "HELEO",
+        "NARDO", "HONGO", "TRIGO", "MAIZ", "ARROZ",
+        "SAUCE", "FRESNO", "CEDRO", "ABETO", "MIMOS"
+    ],
+
+    "COLORES": [
+        "ROJO", "AZUL", "VERDE", "GRIS", "ROSA",
+        "CIAN", "NEGRO", "BLANCO", "LILA", "OCRE",
+        "BEIGE", "MORADO", "CREMA", "CORAL", "COBRE",
+        "PLATA", "ORO", "VIOLETA", "JADE", "TURQ"
+    ],
+
+    "COMIDA": [
+        "PAN", "ARROZ", "PASTA", "PIZZA", "QUESO",
+        "FLAN", "TARTA", "SOPA", "PURE", "HUEVO",
+        "NUEZ", "PERA", "MELON", "MANGO", "KIWI",
+        "LIMON", "UVA", "FRESA", "CACAO", "MIEL"
+    ],
+
+    "PAISES": [
+        "CHILE", "CHINA", "JAPON", "INDIA", "NEPAL",
+        "EGIPTO", "KENIA", "HAITI", "CUBA", "PERU",
+        "IRAN", "IRAQ", "ITALIA", "RUSIA", "SUIZA",
+        "MALTA", "GABON", "SAMOA", "TOGO", "BENIN"
+    ],
+
+    "CUERPO": [
+        "MANO", "PIE", "CODO", "RODILLA", "DEDOS",
+        "LABIO", "NARIZ", "BOCA", "OJO", "CEJA",
+        "PELO", "UÑA", "PIEL", "FEMUR", "TIBIA",
+        "SENOS", "MENTON", "TALON", "NUCA", "DORSO"
+    ],
+
+    "OBJETOS": [
+        "MESA", "SILLA", "CAMA", "VASO", "PLATO",
+        "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
+        "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
+        "BOLSO", "GORRA", "BOTA", "PAPEL", "REGAL"
+    ]
 };
 let temaSel = "ANIMALES";
 
@@ -106,36 +151,59 @@ function loop() {
     if (!activo) return;
     ctx.clearRect(0, 0, W, H);
 
-// --- 1. Marcador de Puntos Pro ---
+// --- 1. Título y Marcador de Puntos Pro ---
 ctx.save();
+
+// A. TÍTULO DEL JUEGO
+const titleText = "LLUVIA DE LETRAS";
+
+ctx.font = `bold ${42 * scale}px Arial`;
+ctx.textAlign = "left";
+ctx.textBaseline = "middle";
+ctx.fillStyle = "#00FFFF";
+ctx.shadowColor = "#00FFFF";
+ctx.shadowBlur = 18 * scale;
+
+ctx.fillText(titleText, 30 * scale, 40 * scale);
+
+// B. MARCADOR DE PUNTOS
 const scoreText = `PUNTOS: ${pts}`;
 ctx.font = `bold ${24 * scale}px Arial`;
+
 const scoreWidth = ctx.measureText(scoreText).width;
 
-// Definimos dimensiones del contenedor
+// Dimensiones del contenedor
 const padX = 20 * scale;
 const padY = 10 * scale;
 const boxW = scoreWidth + (padX * 2);
 const boxH = (30 * scale) + (padY * 2);
-const boxX = W - boxW - 30; // Posición a la derecha
-const boxY = 20;
+const boxX = W - boxW - (30 * scale);
+const boxY = 10 * scale;
 
-// A. Fondo con efecto cristal (oscuro y traslúcido)
+// Fondo con efecto cristal
+ctx.shadowBlur = 0;
 ctx.fillStyle = "rgba(11, 17, 22, 0.8)";
-roundRect(boxX, boxY, boxW, boxH, 12, true, false);
+roundRect(boxX, boxY, boxW, boxH, 12 * scale, true, false);
 
-// B. Borde con brillo (Glow) cian
+// Borde con brillo cian
 ctx.strokeStyle = "rgba(0, 212, 255, 0.6)";
-ctx.lineWidth = 2;
-ctx.shadowBlur = 12;
+ctx.lineWidth = 2 * scale;
+ctx.shadowBlur = 12 * scale;
 ctx.shadowColor = "#00d4ff";
-roundRect(boxX, boxY, boxW, boxH, 12, false, true);
+roundRect(boxX, boxY, boxW, boxH, 12 * scale, false, true);
 
-// C. Texto de los puntos
-ctx.shadowBlur = 0; // Quitamos sombra para que el texto sea nítido
+// Texto de la puntuación
+ctx.shadowBlur = 0;
 ctx.fillStyle = "#00d4ff";
+ctx.font = `bold ${24 * scale}px Arial`;
 ctx.textAlign = "center";
-ctx.fillText(scoreText, boxX + boxW / 2, boxY + boxH / 2 + (8 * scale));
+ctx.textBaseline = "middle";
+ctx.fillText(
+    scoreText,
+    boxX + boxW / 2,
+    boxY + boxH / 2
+);
+
 ctx.restore();
 
     // 2. Palabra Objetivo (Cajón)
@@ -284,7 +352,7 @@ function verificar() {
 
     if (matchGlobal) {
         pts += 100;
-        rVel = Math.min(rVel + 0.06, 1.2);
+        rVel = Math.min(rVel + 0.02, 1.2);
         casillas.forEach(c => { c.char = ""; c.esComodin = false; });
         lanzarPalabra();
     }
