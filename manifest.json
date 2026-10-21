@@ -1,6 +1,6 @@
 {
-  "name": "notegeli",
-  "short_name": "notegeli",
+  "name": "letrasgeli",
+  "short_name": "letrasgeli",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
