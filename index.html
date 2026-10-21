@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Survival Letras</title>
+    <link rel="stylesheet" href="letras.css">
+</head>
+<body>
+    <div id="menu-inicio">
+        <h1>SURVIVAL: LETRAS</h1>
+        <div class="seccion-opciones">
+            <button class="btn-opcion active" onclick="setTema('ANIMALES', this)">ANIMALES</button>
+            <button class="btn-opcion" onclick="setTema('PLANTAS', this)">PLANTAS</button>
+            <button class="btn-opcion" onclick="setTema('COLORES', this)">COLORES</button>
+        </div>
+        <button id="btn-jugar" onclick="empezarPartida()">EMPEZAR</button>
+    </div>
+
+    <div id="game-over-screen" style="display: none;">
+        <h2>¡LA PALABRA SE ESCAPÓ!</h2>
+        <p id="final-pts">PUNTOS: 0</p>
+        <button onclick="location.reload()">REINTENTAR</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>
