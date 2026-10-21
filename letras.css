@@ -82,3 +82,114 @@ body {
     pointer-events: none;
     text-transform: uppercase;
 }
+/* Contenedor general del menú de inicio */
+.menu-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #070b12 0%, #0f172a 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.menu-content {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Título con estilo Pro */
+.game-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.game-title .highlight {
+    color: #00d4ff;
+    text-shadow: 0 0 25px rgba(0, 212, 255, 0.6);
+}
+
+.menu-subtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+/* Cuadrícula de opciones simétrica (Grid) */
+.seccion-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+/* Hacer que el último botón ocupe las dos columnas si se desea, o dejarlo uniforme */
+.seccion-opciones button:nth-last-child(1):nth-child(odd) {
+    grid-column: span 2;
+}
+
+/* Estilo de los botones de categoría */
+.btn-opcion {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+}
+
+.btn-opcion:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.4);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Botón de tema activo / seleccionado */
+.btn-opcion.active {
+    background: linear-gradient(135deg, #00d4ff 0%, #0082ff 100%);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+}
+
+/* Botón principal de Empezar */
+.btn-jugar-pro {
+    width: 100%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: white;
+    padding: 16px;
+    font-size: 1rem;
+    font-weight: 800;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-jugar-pro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+}
+
+.btn-jugar-pro:active {
+    transform: translateY(1px);
+}

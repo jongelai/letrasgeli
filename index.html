@@ -8,8 +8,13 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div id="menu-inicio">
-        <h1>LLUVIA DE LETRAS</h1>
+<div id="menu-inicio" class="menu-overlay">
+    <div class="menu-content">
+        <!-- Logo o Título con estilo neón sutil -->
+        <h1 class="game-title">LLUVIA DE <span class="highlight">LETRAS</span></h1>
+        <p class="menu-subtitle">Selecciona una categoría para empezar</p>
+
+        <!-- Botones de temas en cuadrícula -->
         <div class="seccion-opciones">
             <button class="btn-opcion active" onclick="setTema('ANIMALES', this)">ANIMALES</button>
             <button class="btn-opcion" onclick="setTema('PLANTAS', this)">PLANTAS</button>
@@ -17,10 +22,15 @@
             <button class="btn-opcion" onclick="setTema('COMIDA', this)">COMIDA</button>
             <button class="btn-opcion" onclick="setTema('PAISES', this)">PAISES</button>
             <button class="btn-opcion" onclick="setTema('CUERPO', this)">CUERPO</button>
-            <button class="btn-opcion" onclick="setTema('OBJETOS', this)">OBJETOS</button>
+            <button class="btn-opcion" onclick="setTema('VARIOS', this)">VARIOS</button>
         </div>
-        <button id="btn-jugar" onclick="empezarPartida()">EMPEZAR</button>
+
+        <!-- Botón de EMPEZAR grande y llamativo -->
+        <button id="btn-jugar" class="btn-jugar-pro" onclick="empezarPartida()">
+            <i class="bi bi-play-fill"></i> EMPEZAR JUEGO
+        </button>
     </div>
+</div>
 
     <div id="game-over-screen" style="display: none;">
         <h2>¡LA PALABRA SE ESCAPÓ!</h2>

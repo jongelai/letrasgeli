@@ -48,12 +48,12 @@ const TEMAS = {
         "SENOS", "MENTON", "TALON", "NUCA", "DORSO"
     ],
 
-    "OBJETOS": [
-        "MESA", "SILLA", "CAMA", "VASO", "PLATO",
-        "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
-        "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
-        "BOLSO", "GORRA", "BOTA", "PAPEL", "REGAL"
-    ]
+    "VARIOS": [
+    "MESA", "SILLA", "CAMA", "VASO", "PLATO",
+    "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
+    "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
+    "BOLSO", "GORRA", "BOTA", "PAPEL", "REGAL"
+]
 };
 let temaSel = "ANIMALES";
 
@@ -206,7 +206,7 @@ ctx.fillText(
 
 ctx.restore();
 
-    // 2. Palabra Objetivo (Cajón)
+// 2. Palabra Objetivo (Cajón)
     rX -= rVel;
     let esPeligro = rX < W * 0.3;
     ctx.font = `bold ${38 * scale}px Arial`;
@@ -215,12 +215,15 @@ ctx.restore();
     ctx.save();
     ctx.strokeStyle = esPeligro ? "#ff4d4d" : "#00d4ff";
     ctx.lineWidth = 3;
-    roundRect(rX, 100, textWidth, 50, 10, false, true);
+    
+    // Posición Y cambiada a 20 para subirlo
+    roundRect(rX, 50, textWidth, 50, 10, false, true);
     ctx.fillStyle = "rgba(11, 17, 22, 0.9)";
-    roundRect(rX, 100, textWidth, 50, 10, true, false);
+    roundRect(rX, 50, textWidth, 50, 10, true, false);
+    
     ctx.fillStyle = esPeligro ? "#ff4d4d" : "white";
     ctx.textAlign = "center";
-    ctx.fillText(pActual, rX + textWidth/2, 140);
+    ctx.fillText(pActual, rX + textWidth/2, 90); // Texto ajustado proporcionalmente a Y=20
     ctx.restore();
 
     if (rX + textWidth < 0) {
