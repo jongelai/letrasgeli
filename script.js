@@ -52,7 +52,7 @@ const TEMAS = {
     "MESA", "SILLA", "CAMA", "VASO", "PLATO",
     "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
     "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
-    "BOLSO", "GORRA", "BOTA", "PAPEL", "REGAL"
+    "BOLSO", "GORRA", "BOTA", "PAPEL", "PEDAL"
 ]
 };
 let temaSel = "ANIMALES";
@@ -73,6 +73,7 @@ function empezarPartida() {
     document.getElementById('menu-inicio').style.display = 'none';
     resize();
     pts = 0;
+    sonarAcierto();
     cola = [...TEMAS[temaSel]].sort(() => Math.random() - 0.5);
     
     let n = 8;
@@ -87,7 +88,24 @@ function empezarPartida() {
         esComodin: false
     }));
 
-    letras = Array.from({length: 35}, () => new Letra());
+    const numColumnas = Math.max(5, Math.floor(W / 90));
+
+letras = Array.from({length: numColumnas * 3}, (_, i) => {
+    const letra = new Letra();
+
+    const columna = i % numColumnas;
+    const fila = Math.floor(i / numColumnas);
+
+    const margen = W * 0.05;
+    const anchoUtil = W - margen * 2;
+
+    letra.x = margen + (columna + 0.5) *
+              (anchoUtil / numColumnas);
+
+    letra.y = -fila * 180 - Math.random() * 80;
+
+    return letra;
+});
     activo = true;
     lanzarPalabra();
     requestAnimationFrame(loop);
@@ -228,6 +246,7 @@ ctx.restore();
 
     if (rX + textWidth < 0) {
         activo = false;
+        sonarError();
         document.getElementById('game-over-screen').style.display = 'flex';
         return;
     }
@@ -293,6 +312,7 @@ function alTocar(e) {
         if (pos.x > c.x && pos.x < c.x + c.w && pos.y > c.y && pos.y < c.y + c.h && c.char !== "") {
             letraArrastrada = { char: c.char, esComodin: c.esComodin, x: pos.x, y: pos.y, deCasilla: true };
             c.char = ""; c.esComodin = false;
+            
             return;
         }
     }
@@ -326,6 +346,7 @@ function alSoltar() {
                 c.char = letraArrastrada.char;
                 c.esComodin = letraArrastrada.esComodin;
                 exito = true;
+                sonarLetra();
                 verificar();
                 break;
             }
@@ -357,6 +378,7 @@ function verificar() {
         pts += 100;
         rVel = Math.min(rVel + 0.02, 1.2);
         casillas.forEach(c => { c.char = ""; c.esComodin = false; });
+        sonarAcierto();
         lanzarPalabra();
     }
 }
@@ -372,3 +394,70 @@ window.addEventListener('touchend', alSoltar);
 
 window.addEventListener('resize', resize);
 resize();
+// ==========================================
+// SITEMA DE SONIDOS SIMPLE (WebAudio API)
+// ==========================================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// 1. Sonido al tocar una letra (Pop suave)
+function sonarLetra() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime); // Frecuencia del tono
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+    
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.08);
+}
+
+// 2. Sonido al completar una palabra (Acierto / Victoria)
+function sonarAcierto() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const notas = [523.25, 659.25, 783.99, 1046.50]; // Notas do-mi-sol-do (Acorde alegre)
+    notas.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        
+        const tiempoInicio = audioCtx.currentTime + (index * 0.06);
+        gain.gain.setValueAtTime(0.15, tiempoInicio);
+        gain.gain.exponentialRampToValueAtTime(0.01, tiempoInicio + 0.15);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(tiempoInicio);
+        osc.stop(tiempoInicio + 0.15);
+    });
+}
+
+// 3. Sonido de fallo / Game Over
+function sonarError() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+    
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+}
