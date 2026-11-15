@@ -3,7 +3,17 @@ const ctx = canvas.getContext('2d');
 
 let W, H, scale, activo = false;
 let pActual = "", cola = [], letras = [], casillas = [];
-let rX = 0, rVel = 0.3, pts = 0, letraArrastrada = null;
+let rX = 0, pts = 0, letraArrastrada = null;
+
+// --- CONFIGURACIÓN DE VELOCIDADES ---
+const CONFIG = {
+    // Velocidad de caída de las letras (mínima y máxima para la aleatoriedad)
+    caidaMin: 1,
+    caidaMax: 2.5,
+    
+    // Velocidad a la que cruza la palabra objetivo horizontalmente
+    palabraHorizontal: 0.5
+};
 
 const TEMAS = {
     "ANIMALES": [
@@ -49,11 +59,11 @@ const TEMAS = {
     ],
 
     "VARIOS": [
-    "MESA", "SILLA", "CAMA", "VASO", "PLATO",
-    "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
-    "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
-    "BOLSO", "GORRA", "BOTA", "PAPEL", "PEDAL"
-]
+        "MESA", "SILLA", "CAMA", "VASO", "PLATO",
+        "TENEDOR", "RELOJ", "LLAVE", "LIBRO", "LAPIZ",
+        "GOMA", "FOCO", "RADIO", "MOVIL", "CAJON",
+        "BOLSO", "GORRA", "BOTA", "PAPEL", "PEDAL"
+    ]
 };
 let temaSel = "ANIMALES";
 
@@ -90,22 +100,16 @@ function empezarPartida() {
 
     const numColumnas = Math.max(5, Math.floor(W / 90));
 
-letras = Array.from({length: numColumnas * 3}, (_, i) => {
-    const letra = new Letra();
+    letras = Array.from({length: numColumnas * 3}, (_, i) => {
+        const columna = i % numColumnas;
+        const fila = Math.floor(i / numColumnas);
 
-    const columna = i % numColumnas;
-    const fila = Math.floor(i / numColumnas);
+        const letra = new Letra(columna, numColumnas);
+        letra.y = -50 - (fila * 120); 
 
-    const margen = W * 0.05;
-    const anchoUtil = W - margen * 2;
+        return letra;
+    });
 
-    letra.x = margen + (columna + 0.5) *
-              (anchoUtil / numColumnas);
-
-    letra.y = -fila * 180 - Math.random() * 80;
-
-    return letra;
-});
     activo = true;
     lanzarPalabra();
     requestAnimationFrame(loop);
@@ -115,6 +119,11 @@ function lanzarPalabra() {
     if (cola.length === 0) cola = [...TEMAS[temaSel]].sort(() => Math.random() - 0.5);
     pActual = String(cola.shift());
     rX = W - 50;
+    letras.forEach((l, index) => {
+        if (index % 2 === 0 && !l.dragging) {
+            l.reset();
+        }
+    });
 }
 
 function roundRect(x, y, w, h, r, fill, stroke) {
@@ -134,7 +143,11 @@ function roundRect(x, y, w, h, r, fill, stroke) {
 }
 
 class Letra {
-    constructor() { this.reset(); this.y = Math.random() * H; }
+    constructor(columnaIndex, numColumnas) { 
+        this.columnaIndex = columnaIndex;
+        this.numColumnas = numColumnas;
+        this.reset();
+    }
     reset() {
         const rand = Math.random();
         this.esComodin = rand < 0.05; 
@@ -142,25 +155,29 @@ class Letra {
         if (this.esComodin) {
             this.char = "⭐";
         } else {
-            // --- SISTEMA DE AYUDA MEJORADO AL 80% ---
-            // Forzamos que pActual sea siempre un texto válido
             const palabraObjetivo = (pActual && pActual !== "undefined") ? String(pActual) : "TIGRE";
             
-            // 80% de probabilidad de que salga una letra de la palabra actual
-            if (Math.random() < 0.8) {
+            if (Math.random() < 0.7) {
                 this.char = palabraObjetivo[Math.floor(Math.random() * palabraObjetivo.length)];
             } else {
-                // 20% de probabilidad de letra aleatoria para mantener el reto
                 const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 this.char = alfabeto[Math.floor(Math.random() * alfabeto.length)];
             }
         }
 
-        
+        const margen = W * 0.05;
+        const anchoUtil = W - margen * 2;
+        this.x = margen + (this.columnaIndex + 0.5) * (anchoUtil / this.numColumnas);
 
-        this.x = 50 + Math.random() * (W - 100);
-        this.y = -50;
-        this.v = (1 + Math.random() * 1) * scale;
+        let minY = 0;
+        if (typeof letras !== 'undefined' && letras.length > 0) {
+            const companeras = letras.filter(l => l !== this && l.columnaIndex === this.columnaIndex);
+            if (companeras.length > 0) {
+                minY = Math.min(...companeras.map(l => l.y));
+            }
+        }
+        this.y = minY > 0 ? -50 - Math.random() * 60 : minY - 130 - Math.random() * 50;
+        this.v = (CONFIG.caidaMin + Math.random() * (CONFIG.caidaMax - CONFIG.caidaMin)) * scale;
         this.dragging = false;
     }
 }
@@ -169,63 +186,49 @@ function loop() {
     if (!activo) return;
     ctx.clearRect(0, 0, W, H);
 
-// --- 1. Título y Marcador de Puntos Pro ---
-ctx.save();
+    // --- 1. Título y Marcador de Puntos Pro ---
+    ctx.save();
+    const titleText = "LLUVIA DE LETRAS";
 
-// A. TÍTULO DEL JUEGO
-const titleText = "LLUVIA DE LETRAS";
+    ctx.font = `bold ${42 * scale}px Arial`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#00FFFF";
+    ctx.shadowColor = "#00FFFF";
+    ctx.shadowBlur = 18 * scale;
+    ctx.fillText(titleText, 30 * scale, 40 * scale);
 
-ctx.font = `bold ${42 * scale}px Arial`;
-ctx.textAlign = "left";
-ctx.textBaseline = "middle";
-ctx.fillStyle = "#00FFFF";
-ctx.shadowColor = "#00FFFF";
-ctx.shadowBlur = 18 * scale;
+    const scoreText = `PUNTOS: ${pts}`;
+    ctx.font = `bold ${24 * scale}px Arial`;
+    const scoreWidth = ctx.measureText(scoreText).width;
 
-ctx.fillText(titleText, 30 * scale, 40 * scale);
+    const padX = 20 * scale;
+    const padY = 10 * scale;
+    const boxW = scoreWidth + (padX * 2);
+    const boxH = (30 * scale) + (padY * 2);
+    const boxX = W - boxW - (30 * scale);
+    const boxY = 10 * scale;
 
-// B. MARCADOR DE PUNTOS
-const scoreText = `PUNTOS: ${pts}`;
-ctx.font = `bold ${24 * scale}px Arial`;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(11, 17, 22, 0.8)";
+    roundRect(boxX, boxY, boxW, boxH, 12 * scale, true, false);
 
-const scoreWidth = ctx.measureText(scoreText).width;
+    ctx.strokeStyle = "rgba(0, 212, 255, 0.6)";
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowBlur = 12 * scale;
+    ctx.shadowColor = "#00d4ff";
+    roundRect(boxX, boxY, boxW, boxH, 12 * scale, false, true);
 
-// Dimensiones del contenedor
-const padX = 20 * scale;
-const padY = 10 * scale;
-const boxW = scoreWidth + (padX * 2);
-const boxH = (30 * scale) + (padY * 2);
-const boxX = W - boxW - (30 * scale);
-const boxY = 10 * scale;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#00d4ff";
+    ctx.font = `bold ${24 * scale}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(scoreText, boxX + boxW / 2, boxY + boxH / 2);
+    ctx.restore();
 
-// Fondo con efecto cristal
-ctx.shadowBlur = 0;
-ctx.fillStyle = "rgba(11, 17, 22, 0.8)";
-roundRect(boxX, boxY, boxW, boxH, 12 * scale, true, false);
-
-// Borde con brillo cian
-ctx.strokeStyle = "rgba(0, 212, 255, 0.6)";
-ctx.lineWidth = 2 * scale;
-ctx.shadowBlur = 12 * scale;
-ctx.shadowColor = "#00d4ff";
-roundRect(boxX, boxY, boxW, boxH, 12 * scale, false, true);
-
-// Texto de la puntuación
-ctx.shadowBlur = 0;
-ctx.fillStyle = "#00d4ff";
-ctx.font = `bold ${24 * scale}px Arial`;
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.fillText(
-    scoreText,
-    boxX + boxW / 2,
-    boxY + boxH / 2
-);
-
-ctx.restore();
-
-// 2. Palabra Objetivo (Cajón)
-    rX -= rVel;
+    // --- 2. Palabra Objetivo (Cajón deslizante) ---
+    rX -= CONFIG.palabraHorizontal;
     let esPeligro = rX < W * 0.3;
     ctx.font = `bold ${38 * scale}px Arial`;
     let textWidth = ctx.measureText(pActual).width + 60;
@@ -234,14 +237,13 @@ ctx.restore();
     ctx.strokeStyle = esPeligro ? "#ff4d4d" : "#00d4ff";
     ctx.lineWidth = 3;
     
-    // Posición Y cambiada a 20 para subirlo
     roundRect(rX, 50, textWidth, 50, 10, false, true);
     ctx.fillStyle = "rgba(11, 17, 22, 0.9)";
     roundRect(rX, 50, textWidth, 50, 10, true, false);
     
     ctx.fillStyle = esPeligro ? "#ff4d4d" : "white";
     ctx.textAlign = "center";
-    ctx.fillText(pActual, rX + textWidth/2, 90); // Texto ajustado proporcionalmente a Y=20
+    ctx.fillText(pActual, rX + textWidth/2, 80);
     ctx.restore();
 
     if (rX + textWidth < 0) {
@@ -251,22 +253,7 @@ ctx.restore();
         return;
     }
 
-
-    // 4. Lluvia de Letras
-    letras.forEach(l => {
-        if (!l.dragging) l.y += l.v;
-        if (l.y > H + 50) l.reset();
-        
-        if ((l.y > 160 && l.y < H * 0.78) || l.dragging) {
-            ctx.save();
-            ctx.fillStyle = l.esComodin ? "#f1c40f" : (l.dragging ? "#00d4ff" : "white");
-            ctx.font = `bold ${40 * scale}px Arial`;
-            ctx.textAlign = "center";
-            ctx.fillText(l.char, l.x, l.y);
-            ctx.restore();
-        }
-    });
-    // 3. Casillas
+    // --- 3. Casillas inferiores ---
     casillas.forEach(c => {
         ctx.save();
         ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
@@ -283,6 +270,21 @@ ctx.restore();
         ctx.restore();
     });
 
+    // --- 4. Lluvia de Letras ---
+    letras.forEach(l => {
+        if (!l.dragging) l.y += l.v;
+        if (l.y > H + 50) l.reset();
+        
+        if ((l.y > 100 && l.y < H * 0.78) || l.dragging) {
+            ctx.save();
+            ctx.fillStyle = l.esComodin ? "#f1c40f" : (l.dragging ? "#00d4ff" : "white");
+            ctx.font = `bold ${40 * scale}px Arial`;
+            ctx.textAlign = "center";
+            ctx.fillText(l.char, l.x, l.y);
+            ctx.restore();
+        }
+    });
+
     if (letraArrastrada) {
         ctx.save();
         ctx.fillStyle = letraArrastrada.esComodin ? "#f1c40f" : "#00d4ff";
@@ -295,7 +297,7 @@ ctx.restore();
     requestAnimationFrame(loop);
 }
 
-// LÓGICA DE CAPTURA MEJORADA
+// LÓGICA DE CAPTURA
 function getPos(e) {
     const r = canvas.getBoundingClientRect();
     const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -307,17 +309,14 @@ function alTocar(e) {
     if (!activo) return;
     const pos = getPos(e);
 
-    // 1. Intentar agarrar de casilla
     for (let c of casillas) {
         if (pos.x > c.x && pos.x < c.x + c.w && pos.y > c.y && pos.y < c.y + c.h && c.char !== "") {
             letraArrastrada = { char: c.char, esComodin: c.esComodin, x: pos.x, y: pos.y, deCasilla: true };
             c.char = ""; c.esComodin = false;
-            
             return;
         }
     }
 
-    // 2. Intentar agarrar de lluvia (Área de clic más grande: 50px)
     for (let l of letras) {
         if (Math.hypot(l.x - pos.x, l.y - pos.y) < 50 * scale) {
             l.dragging = true;
@@ -339,13 +338,11 @@ function alMover(e) {
 function alSoltar() {
     if (!letraArrastrada) return;
     
-    let exito = false;
     for (let c of casillas) {
         if (letraArrastrada.x > c.x && letraArrastrada.x < c.x + c.w && letraArrastrada.y > c.y && letraArrastrada.y < c.y + c.h) {
             if (c.char === "") {
                 c.char = letraArrastrada.char;
                 c.esComodin = letraArrastrada.esComodin;
-                exito = true;
                 sonarLetra();
                 verificar();
                 break;
@@ -353,7 +350,6 @@ function alSoltar() {
         }
     }
 
-    // Si venía de la lluvia, resetearla. Si era de casilla y no se puso en otra, desaparece.
     if (letraArrastrada.reset) {
         letraArrastrada.reset();
         letraArrastrada.dragging = false;
@@ -362,7 +358,6 @@ function alSoltar() {
 }
 
 function verificar() {
-    let formada = casillas.map(c => c.char).join("");
     let matchGlobal = false;
     
     for (let i = 0; i <= casillas.length - pActual.length; i++) {
@@ -376,7 +371,7 @@ function verificar() {
 
     if (matchGlobal) {
         pts += 100;
-        rVel = Math.min(rVel + 0.02, 1.2);
+        CONFIG.palabraHorizontal = Math.min(CONFIG.palabraHorizontal + 0.05, 2.0); // Acelera ligeramente al acertar
         casillas.forEach(c => { c.char = ""; c.esComodin = false; });
         sonarAcierto();
         lanzarPalabra();
@@ -394,19 +389,19 @@ window.addEventListener('touchend', alSoltar);
 
 window.addEventListener('resize', resize);
 resize();
+
 // ==========================================
-// SITEMA DE SONIDOS SIMPLE (WebAudio API)
+// SISTEMA DE SONIDOS SIMPLE (WebAudio API)
 // ==========================================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// 1. Sonido al tocar una letra (Pop suave)
 function sonarLetra() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(400, audioCtx.currentTime); // Frecuencia del tono
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
     
     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
@@ -419,10 +414,9 @@ function sonarLetra() {
     osc.stop(audioCtx.currentTime + 0.08);
 }
 
-// 2. Sonido al completar una palabra (Acierto / Victoria)
 function sonarAcierto() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const notas = [523.25, 659.25, 783.99, 1046.50]; // Notas do-mi-sol-do (Acorde alegre)
+    const notas = [523.25, 659.25, 783.99, 1046.50];
     notas.forEach((freq, index) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -442,7 +436,6 @@ function sonarAcierto() {
     });
 }
 
-// 3. Sonido de fallo / Game Over
 function sonarError() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
